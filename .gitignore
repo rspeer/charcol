@@ -1,0 +1,5 @@
+charcol/secrets.py
+*.egg-info
+*.pyc
+dist
+__pycache__
