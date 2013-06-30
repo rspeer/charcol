@@ -51,8 +51,10 @@ class CharCounter:
         for tweet in iterator:
             if 'text' in tweet:
                 self.handle_tweet(tweet)
+            if count % 1000 == 0:
+                print(count)
             count += 1
-            if count % 10000 == 100:
+            if count % 1000 == 100:
                 self.save_file()
 
     def handle_tweet(self, tweet):

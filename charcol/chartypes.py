@@ -2,10 +2,11 @@ import unicodedata
 
 category_set = set()
 def get_category(ch):
-    try:
-        return unicodedata.name(ch).split()[0]
-    except ValueError:
-        return ''
+    #try:
+    #    return unicodedata.name(ch).split()[0]
+    #except ValueError:
+    #    return ''
+    return unicodedata.category(ch)[0]
 
 for codept in range(2**16):
     cat = get_category(chr(codept))
