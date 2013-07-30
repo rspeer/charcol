@@ -181,7 +181,7 @@ def processFile(filename, options):
     x = numpy.array(x)
     y = numpy.array(y)
     if options.logscale:
-        y = numpy.log(y + 1) ** .75
+        y = numpy.log(y + 1)
     if options.normalize:
         y -= numpy.average(y)
         y /= numpy.std(y)
