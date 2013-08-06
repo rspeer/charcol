@@ -6,7 +6,9 @@ from charcol.secrets import (
 import json
 import time
 import unicodedata
-
+from ftfy import fix_text_encoding
+from ftfy.badness import sequence_weirdness
+from ftfy.chardata import possible_encoding
 
 DATAFILE = 'freq.csv'
 
@@ -51,14 +53,24 @@ class CharCounter:
         for tweet in iterator:
             if 'text' in tweet:
                 self.handle_tweet(tweet)
-            if count % 1000 == 0:
+            if count % 10000 == 0:
                 print(count)
             count += 1
-            if count % 1000 == 100:
+            if count % 10000 == 100:
                 self.save_file()
+
+    def check_ftfy(self, text):
+        if not possible_encoding(text, 'ascii'):
+            fixed = fix_text_encoding(text)
+            if text != fixed or sequence_weirdness(text) >= 10:
+                if text != fixed:
+                    print(u'Text:\t{text}\nFixed:\t{fixed}\n'.format(text=text, fixed=fixed))
+                else:
+                    print(u'Not fixed:\t{text}\n'.format(text=text))
 
     def handle_tweet(self, tweet):
         text = tweet['text']
+        self.check_ftfy(text)
 
         for char in text:
             if char not in self.chars:
