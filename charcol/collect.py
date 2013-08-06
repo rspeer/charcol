@@ -9,14 +9,16 @@ import unicodedata
 from ftfy import fix_text_encoding
 from ftfy.badness import sequence_weirdness
 from ftfy.chardata import possible_encoding
+from collections import defaultdict
 
 DATAFILE = 'freq.csv'
 
 class CharCounter:
     def __init__(self):
         self.chars = {}
+        self.lines_by_lang = defaultdict(list)
 
-    def load_file(self):
+    def load_files(self):
         thefile = open(DATAFILE)
         chars = {}
         for line in thefile:
@@ -29,7 +31,7 @@ class CharCounter:
         self.chars = chars
         thefile.close()
 
-    def save_file(self):
+    def save_files(self):
         thefile = open(DATAFILE, 'w')
         charlist = sorted(self.chars.keys())
         for char in charlist:
@@ -41,6 +43,13 @@ class CharCounter:
                 name = '[unknown character]'
             print('{}\t{}\t{}'.format(codept, freq, name), file=thefile)
         thefile.close()
+        
+        for lang, lines in self.lines_by_lang.items():
+            langfile = open('tweets.{}.txt'.format(lang), 'a')
+            for line in lines:
+                print(line.replace('\n', ' '), file=langfile)
+            langfile.close()
+        self.lines_by_lang = defaultdict(list)
 
     def run_sample(self):
         auth = OAuth(
@@ -57,20 +66,20 @@ class CharCounter:
                 print(count)
             count += 1
             if count % 10000 == 100:
-                self.save_file()
+                self.save_files()
 
     def check_ftfy(self, text):
         if not possible_encoding(text, 'ascii'):
             fixed = fix_text_encoding(text)
-            if text != fixed or sequence_weirdness(text) >= 10:
-                if text != fixed:
-                    print(u'Text:\t{text}\nFixed:\t{fixed}\n'.format(text=text, fixed=fixed))
-                else:
-                    print(u'Not fixed:\t{text}\n'.format(text=text))
+            if text != fixed:
+                print(u'Text:\t{text}\nFixed:\t{fixed}\n'.format(text=text, fixed=fixed))
 
     def handle_tweet(self, tweet):
         text = tweet['text']
         self.check_ftfy(text)
+        if 'user' in tweet:
+            lang = tweet['user'].get('lang', 'NONE')
+            self.lines_by_lang[lang].append(tweet['text'])
 
         for char in text:
             if char not in self.chars:
@@ -86,7 +95,7 @@ class CharCounter:
 def main():
     counter = CharCounter()
     try:
-        counter.load_file()
+        counter.load_files()
     except IOError:
         pass
     counter.run_sample()
