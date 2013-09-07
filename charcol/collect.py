@@ -17,6 +17,7 @@ class CharCounter:
     def __init__(self):
         self.chars = {}
         self.lines_by_lang = defaultdict(list)
+        self.num_fixed = 0
 
     def load_files(self):
         thefile = open(DATAFILE)
@@ -63,7 +64,7 @@ class CharCounter:
             if 'text' in tweet:
                 self.handle_tweet(tweet)
             if count % 10000 == 0:
-                print(count)
+                print('%d/%d' % (self.num_fixed, count))
             count += 1
             if count % 10000 == 100:
                 self.save_files()
@@ -73,7 +74,9 @@ class CharCounter:
         if not possible_encoding(text, 'ascii') and 'unfollow' not in check_text:
             fixed = fix_text_encoding(text)
             if text != fixed:
-                print(u'Text:\t{text}\nFixed:\t{fixed}\n'.format(text=text, fixed=fixed))
+                if not check_text.startswith('http://t.co/'):
+                    print(u'Text:\t{text}\nFixed:\t{fixed}\n'.format(text=text, fixed=fixed))
+                self.num_fixed += 1
 
     def handle_tweet(self, tweet):
         text = tweet['text']
