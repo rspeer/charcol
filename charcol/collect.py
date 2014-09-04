@@ -11,8 +11,14 @@ from ftfy.badness import sequence_weirdness
 from ftfy.chardata import possible_encoding
 from collections import defaultdict
 
-DATAFILE = 'freq.csv'
+def get_auth():
+    return OAuth(
+        access_token, access_token_secret,
+        consumer_key, consumer_secret
+    )
 
+DATAFILE = 'freq.csv'
+CORPUS_PATH = '/media/rspeer/mungofiles/data/twitter/'
 class CharCounter:
     def __init__(self):
         self.chars = {}
@@ -46,17 +52,14 @@ class CharCounter:
         thefile.close()
         
         for lang, lines in self.lines_by_lang.items():
-            langfile = open('tweets.{}.txt'.format(lang), 'a')
+            langfile = open(CORPUS_PATH + 'tweets.{}.txt'.format(lang), 'a')
             for line in lines:
-                print(line.replace('\n', ' '), file=langfile)
+                print(line, file=langfile)
             langfile.close()
         self.lines_by_lang = defaultdict(list)
 
     def run_sample(self):
-        auth = OAuth(
-            access_token, access_token_secret,
-            consumer_key, consumer_secret
-        )
+        auth = get_auth()
         twitter_stream = TwitterStream(auth=auth)
         iterator = twitter_stream.statuses.sample()
         count = 0
@@ -83,7 +86,8 @@ class CharCounter:
         self.check_ftfy(text)
         if 'user' in tweet:
             lang = tweet['user'].get('lang', 'NONE')
-            self.lines_by_lang[lang].append(tweet['text'])
+            text = '%s\t%s' % (tweet['id'], tweet['text'].replace('\n', ' '))
+            self.lines_by_lang[lang].append(text)
 
         for char in text:
             if char not in self.chars:
